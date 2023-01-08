@@ -1,6 +1,6 @@
 import { face } from './face';
 import { Nedb } from './adapter/nedb-adapter';
-import { APIEmbedField, Client } from 'discord.js'
+import { APIEmbedField, CacheType, Client, Interaction } from 'discord.js'
 import dotenv from 'dotenv'
 import { command, commands, subCommands } from './commands';
 import { isAuth } from './auth';
@@ -18,7 +18,9 @@ client.once('ready', async () => {
     console.log('Ready!');
 });
 
-client.on('interactionCreate', async (interaction) => {
+client.on("interactionCreate", interaction => onInteraction(interaction).catch(err => console.error(err)));
+
+async function onInteraction(interaction: Interaction<CacheType>) {
     if (!interaction.isCommand()) {
         return;
     }
@@ -122,6 +124,6 @@ client.on('interactionCreate', async (interaction) => {
             }
         }
     }
-});
+}
 
 client.login(process.env.TOKEN);

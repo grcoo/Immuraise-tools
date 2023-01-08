@@ -29,115 +29,116 @@ client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
     yield ((_a = client.application) === null || _a === void 0 ? void 0 : _a.commands.set(commands_1.commands, (_b = process.env.SERVER_ID) !== null && _b !== void 0 ? _b : ''));
     console.log('Ready!');
 }));
-client.on('interactionCreate', (interaction) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c, _d, _e, _f, _g, _h, _j, _k;
-    if (!interaction.isCommand()) {
-        return;
-    }
-    if (interaction.channelId !== '926101147578662932') {
-        yield interaction.reply((0, embeds_1.dangerEmbeds)('コマンドを実行するchが違うようです。'));
-        return;
-    }
-    if (interaction.commandName === commands_1.command) {
-        if (!interaction.isChatInputCommand())
+client.on("interactionCreate", interaction => onInteraction(interaction).catch(err => console.error(err)));
+function onInteraction(interaction) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!interaction.isCommand()) {
             return;
-        if (interaction.options.getSubcommand() === commands_1.subCommands.create) {
-            const ptname = (_c = interaction.options.getString('ptname')) !== null && _c !== void 0 ? _c : '';
-            const isExist = yield ptList.get(ptname);
-            if (isExist) {
-                yield interaction.reply((0, embeds_1.dangerEmbeds)('既に存在するptです。'));
+        }
+        if (interaction.channelId !== '926101147578662932') {
+            yield interaction.reply((0, embeds_1.dangerEmbeds)('コマンドを実行するchが違うようです。'));
+            return;
+        }
+        if (interaction.commandName === commands_1.command) {
+            if (!interaction.isChatInputCommand())
                 return;
-            }
-            ;
-            console.log(interaction.user.id);
-            yield ptList.create(ptname, interaction.user.id);
-            yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname} 作成完了!`));
-        }
-        if (interaction.options.getSubcommand() === commands_1.subCommands.list) {
-            const list = yield ptList.getAll();
-            if (list !== null && list.length !== 0) {
-                const fields = list.map(pt => {
-                    return {
-                        name: pt.name,
-                        value: `${pt.list.length}名の参加者`,
-                        inline: true
-                    };
-                });
-                yield interaction.reply((0, embeds_1.successEmbeds)(':family_mmgb: PT一覧', fields));
-            }
-            else {
-                yield interaction.reply((0, embeds_1.dangerEmbeds)('ptは1件も登録されていません。'));
-            }
-        }
-        if (interaction.options.getSubcommand() === commands_1.subCommands.remove) {
-            const ptname = (_d = interaction.options.getString('ptname')) !== null && _d !== void 0 ? _d : '';
-            const pt = yield ptList.get(ptname);
-            if (pt !== null) {
-                if (!(yield (0, auth_1.isAuth)(interaction, pt))) {
-                    const creator = yield client.users.fetch(pt.creatorId);
-                    yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}を削除する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ削除できます。`));
+            if (interaction.options.getSubcommand() === commands_1.subCommands.create) {
+                const ptname = (_a = interaction.options.getString('ptname')) !== null && _a !== void 0 ? _a : '';
+                const isExist = yield ptList.get(ptname);
+                if (isExist) {
+                    yield interaction.reply((0, embeds_1.dangerEmbeds)('既に存在するptです。'));
+                    return;
                 }
-                yield ptList.delete(ptname);
-                yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname} 削除完了!`));
+                ;
+                yield ptList.create(ptname, interaction.user.id);
+                yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname} 作成完了!`));
             }
-            else {
-                yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
-            }
-        }
-        if (interaction.options.getSubcommand() === commands_1.subCommands.add) {
-            const ptname = (_e = interaction.options.getString('ptname')) !== null && _e !== void 0 ? _e : '';
-            const pt = yield ptList.get(ptname);
-            if (pt !== null) {
-                pt.list.push({ userId: interaction.user.id, name: (_f = interaction.options.getString('name')) !== null && _f !== void 0 ? _f : '', ip: Number(interaction.options.getString('ip')) });
-                yield ptList.update(ptname, pt.list);
-                yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname}に ${(_g = interaction.options.getString('name')) !== null && _g !== void 0 ? _g : ''} 追加完了!`));
-            }
-            else {
-                yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
-            }
-        }
-        if (interaction.options.getSubcommand() === commands_1.subCommands.member) {
-            const ptname = (_h = interaction.options.getString('ptname')) !== null && _h !== void 0 ? _h : '';
-            const pt = yield ptList.get(ptname);
-            if (pt !== null) {
-                const list = pt.list.map((member) => `name: ${member.name} ip: ${member.ip}`).join();
-                const fields = pt.list.map(pt => {
-                    return {
-                        name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${pt.name}`,
-                        value: `:crossed_swords: ${pt.ip.toString()}`,
-                        inline: true
-                    };
-                });
-                yield interaction.reply((0, embeds_1.successEmbeds)(`:family_mmgb: ${ptname} 参加者一覧!`, fields));
-            }
-            else {
-                yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
-            }
-        }
-        if (interaction.options.getSubcommand() === commands_1.subCommands.deal) {
-            const ptname = (_j = interaction.options.getString('ptname')) !== null && _j !== void 0 ? _j : '';
-            const pt = yield ptList.get(ptname);
-            console.log(pt);
-            if (pt !== null) {
-                if (!(yield (0, auth_1.isAuth)(interaction, pt))) {
-                    const creator = yield client.users.fetch(pt.creatorId);
-                    yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}を清算する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ清算できます。`));
+            if (interaction.options.getSubcommand() === commands_1.subCommands.list) {
+                const list = yield ptList.getAll();
+                if (list !== null) {
+                    const fields = list.map(pt => {
+                        return {
+                            name: pt.name,
+                            value: `${pt.list.length}名の参加者`,
+                            inline: true
+                        };
+                    });
+                    yield interaction.reply('');
                 }
-                const totalIp = pt.list.map((member) => member.ip).reduce((a, b) => Number(a) + Number(b));
-                const silver = Number((_k = interaction.options.getString('silver')) !== null && _k !== void 0 ? _k : '0');
-                const fields = pt.list.map(member => {
-                    return {
-                        name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${member.name}`,
-                        value: `${(silver * (Number(member.ip) / totalIp) / 1000000).toFixed(3)}M`,
-                        inline: true
-                    };
-                });
-                yield interaction.reply((0, embeds_1.successEmbedsWithDescription)(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計シルバー: ${silver} :crossed_swords:合計IP: ${totalIp} :family_mmgb:参加人数: ${pt.list.length}名`));
+                else {
+                    yield interaction.reply((0, embeds_1.dangerEmbeds)('ptは1件も登録されていません。'));
+                }
             }
-            else {
-                yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
+            if (interaction.options.getSubcommand() === commands_1.subCommands.remove) {
+                const ptname = (_b = interaction.options.getString('ptname')) !== null && _b !== void 0 ? _b : '';
+                const pt = yield ptList.get(ptname);
+                if (pt !== null) {
+                    if (!(yield (0, auth_1.isAuth)(interaction, pt))) {
+                        const creator = yield client.users.fetch(pt.creatorId);
+                        yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}を削除する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ削除できます。`));
+                    }
+                    yield ptList.delete(ptname);
+                    yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname} 削除完了!`));
+                }
+                else {
+                    yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
+                }
+            }
+            if (interaction.options.getSubcommand() === commands_1.subCommands.add) {
+                const ptname = (_c = interaction.options.getString('ptname')) !== null && _c !== void 0 ? _c : '';
+                const pt = yield ptList.get(ptname);
+                if (pt !== null) {
+                    pt.list.push({ userId: interaction.user.id, name: (_d = interaction.options.getString('name')) !== null && _d !== void 0 ? _d : '', ip: Number(interaction.options.getString('ip')) });
+                    yield ptList.update(ptname, pt.list);
+                    yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname}に ${(_e = interaction.options.getString('name')) !== null && _e !== void 0 ? _e : ''} 追加完了!`));
+                }
+                else {
+                    yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
+                }
+            }
+            if (interaction.options.getSubcommand() === commands_1.subCommands.member) {
+                const ptname = (_f = interaction.options.getString('ptname')) !== null && _f !== void 0 ? _f : '';
+                const pt = yield ptList.get(ptname);
+                if (pt !== null) {
+                    const list = pt.list.map((member) => `name: ${member.name} ip: ${member.ip}`).join();
+                    const fields = pt.list.map(pt => {
+                        return {
+                            name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${pt.name}`,
+                            value: `:crossed_swords: ${pt.ip.toString()}`,
+                            inline: true
+                        };
+                    });
+                    yield interaction.reply((0, embeds_1.successEmbeds)(`:family_mmgb: ${ptname} 参加者一覧!`, fields));
+                }
+                else {
+                    yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
+                }
+            }
+            if (interaction.options.getSubcommand() === commands_1.subCommands.deal) {
+                const ptname = (_g = interaction.options.getString('ptname')) !== null && _g !== void 0 ? _g : '';
+                const pt = yield ptList.get(ptname);
+                if (pt !== null) {
+                    if (!(yield (0, auth_1.isAuth)(interaction, pt))) {
+                        const creator = yield client.users.fetch(pt.creatorId);
+                        yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}を清算する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ清算できます。`));
+                    }
+                    const totalIp = pt.list.map((member) => member.ip).reduce((a, b) => Number(a) + Number(b));
+                    const silver = Number((_h = interaction.options.getString('silver')) !== null && _h !== void 0 ? _h : '0');
+                    const fields = pt.list.map(member => {
+                        return {
+                            name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${member.name}`,
+                            value: `${(silver * (Number(member.ip) / totalIp) / 1000000).toFixed(2)}M`,
+                            inline: true
+                        };
+                    });
+                    yield interaction.reply((0, embeds_1.successEmbedsWithDescription)(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計シルバー: ${silver} :crossed_swords:合計IP: ${totalIp} :family_mmgb:参加人数: ${pt.list.length}名`));
+                }
+                else {
+                    yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
+                }
             }
         }
-    }
-}));
+    });
+}
 client.login(process.env.TOKEN);
