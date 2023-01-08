@@ -25,8 +25,9 @@ const client = new discord_js_1.Client({
     intents: ['Guilds', 'GuildMembers', 'GuildMessages', 'MessageContent'],
 });
 client.once('ready', () => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
-    yield ((_a = client.application) === null || _a === void 0 ? void 0 : _a.commands.set(commands_1.commands, (_b = process.env.SERVER_ID) !== null && _b !== void 0 ? _b : ''));
+    var _a, _b, _c, _d;
+    yield ((_a = client.application) === null || _a === void 0 ? void 0 : _a.commands.set(commands_1.commands, (_b = process.env.SERVER_ID1) !== null && _b !== void 0 ? _b : ''));
+    yield ((_c = client.application) === null || _c === void 0 ? void 0 : _c.commands.set(commands_1.commands, (_d = process.env.SERVER_ID2) !== null && _d !== void 0 ? _d : ''));
     console.log('Ready!');
 }));
 client.on("interactionCreate", interaction => onInteraction(interaction).catch(err => console.error(err)));
@@ -36,10 +37,10 @@ function onInteraction(interaction) {
         if (!interaction.isCommand()) {
             return;
         }
-        if (interaction.channelId !== '926101147578662932') {
-            yield interaction.reply((0, embeds_1.dangerEmbeds)('コマンドを実行するchが違うようです。'));
-            return;
-        }
+        // if (interaction.channelId !== process.env.CHANNEL_ID) {
+        //     await interaction.reply(dangerEmbeds('コマンドを実行するchが違うようです。'));
+        //     return;
+        // }
         if (interaction.commandName === commands_1.command) {
             if (!interaction.isChatInputCommand())
                 return;
@@ -90,9 +91,9 @@ function onInteraction(interaction) {
                 const pt = yield ptList.get(ptname);
                 if (pt !== null) {
                     const userName = yield (yield client.users.fetch(interaction.user.id)).username;
-                    pt.list.push({ userId: interaction.user.id, name: userName, ip: Number(interaction.options.getString('ip')) });
+                    pt.list.push({ userId: interaction.user.id, name: userName, ip: Number(interaction.options.getString('ip')), repairCost: Number(interaction.options.getString('repaircost')) });
                     yield ptList.update(ptname, pt.list);
-                    yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname}に ${userName} 追加完了!`));
+                    yield interaction.reply((0, embeds_1.successEmbeds)(`:triangular_flag_on_post: ${ptname}に ${userName}::crossed_swords: ${interaction.options.getString('ip')}:tools: ${interaction.options.getString('repaircost')}    追加完了!`));
                 }
                 else {
                     yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));
@@ -102,7 +103,6 @@ function onInteraction(interaction) {
                 const ptname = (_d = interaction.options.getString('ptname')) !== null && _d !== void 0 ? _d : '';
                 const pt = yield ptList.get(ptname);
                 if (pt !== null) {
-                    const list = pt.list.map((member) => `name: ${member.name} ip: ${member.ip}`).join();
                     const fields = pt.list.map(pt => {
                         return {
                             name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${pt.name}`,
@@ -125,15 +125,20 @@ function onInteraction(interaction) {
                         yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}を清算する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ清算できます。`));
                     }
                     const totalIp = pt.list.map((member) => member.ip).reduce((a, b) => Number(a) + Number(b));
+                    const totalCost = pt.list.map((member) => member.repairCost).reduce((a, b) => Number(a) + Number(b));
+                    pt.list.forEach((member) => console.log(member.repairCost));
+                    console.log(totalCost);
                     const silver = Number((_f = interaction.options.getString('silver')) !== null && _f !== void 0 ? _f : '0');
+                    const substanceSilver = (silver - totalCost) * 0.8;
                     const fields = pt.list.map(member => {
                         return {
-                            name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${member.name}`,
-                            value: `${(silver * (Number(member.ip) / totalIp) / 1000000).toFixed(2)}M`,
+                            name: `${face_1.face[Math.floor(Math.random() * face_1.face.length)]} ${member.name}: ${member.ip}`,
+                            value: `${(substanceSilver * (Number(member.ip) / totalIp) / 1000000).toFixed(2)}M`,
                             inline: true
                         };
                     });
-                    yield interaction.reply((0, embeds_1.successEmbedsWithDescription)(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計シルバー: ${silver} :crossed_swords:合計IP: ${totalIp} :family_mmgb:参加人数: ${pt.list.length}名`));
+                    yield interaction.reply((0, embeds_1.successEmbedsWithDescription)(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計: ${silver} 実質: ${substanceSilver}  :crossed_swords:平均IP: ${totalIp / pt.list.length} :family_mmgb:参加人数: ${pt.list.length}名`));
+                    yield ptList.delete(ptname);
                 }
                 else {
                     yield interaction.reply((0, embeds_1.dangerEmbeds)(`pt: ${ptname}は未登録です。`));

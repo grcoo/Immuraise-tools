@@ -62,6 +62,12 @@ export const commands: ChatInputApplicationCommandData[] = [{
                     description: 'ipを指定します',
                     required: true
                 },
+                {
+                    type: 3,
+                    name: 'repaircost',
+                    description: '修理費を指定します',
+                    required: true
+                }
             ]
         },
         {
@@ -91,7 +97,7 @@ export const commands: ChatInputApplicationCommandData[] = [{
                 {
                     type: 3,
                     name: 'silver',
-                    description: 'シルバー',
+                    description: '合計シルバーを指定します',
                     required: true
                 }
             ]

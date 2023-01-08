@@ -3,11 +3,14 @@ import Datastore from 'nedb-promises'
 export interface PtList {
     name: string;
     creatorId: string;
-    list: {
-        userId: string;
-        name: string;
-        ip: number;
-    }[];
+    list: Member[];
+}
+
+export interface Member {
+    userId: string;
+    name: string;
+    ip: number;
+    repairCost: number;
 }
 
 export class Nedb {
@@ -33,7 +36,7 @@ export class Nedb {
         await this.db.remove({ name: name }, {});
     }
 
-    public async update(name: string, list: { userId: string, name: string; ip: number; }[]) {
+    public async update(name: string, list: Member[]) {
         await this.db.update<PtList>({ name: name }, { $set: { list: list } }, { multi: true });
     }
 }
