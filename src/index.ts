@@ -116,11 +116,11 @@ async function onInteraction(interaction: Interaction<CacheType>) {
                 const fields: APIEmbedField[] = pt.list.map(member => {
                     return {
                         name: `${face[Math.floor(Math.random() * face.length)]} ${member.name}: ${member.ip}`,
-                        value: `${(substanceSilver * (Number(member.ip) / totalIp) / 1000000).toFixed(2)}M`,
+                        value: `${((substanceSilver * (Number(member.ip) / totalIp) + member.repairCost) / 1000000).toFixed(2)}M`,
                         inline: true
                     }
                 });
-                await interaction.reply(successEmbedsWithDescription(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計: ${silver} 実質: ${substanceSilver}  :crossed_swords:平均IP: ${totalIp / pt.list.length} :family_mmgb:参加人数: ${pt.list.length}名`));
+                await interaction.reply(successEmbedsWithDescription(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計: ${(silver / 1000000).toFixed(2)}M 修理費以外: ${((silver - totalCost) / 1000000).toFixed(2)}M 分配金: × 0.8 = ${(substanceSilver / 1000000).toFixed(2)}M  :crossed_swords:平均IP: ${totalIp / pt.list.length} :family_mmgb:参加人数: ${pt.list.length}名`));
                 await ptList.delete(ptname);
             } else {
                 await interaction.reply(dangerEmbeds(`pt: ${ptname}は未登録です。`));
