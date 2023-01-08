@@ -5,8 +5,14 @@ import dotenv from 'dotenv'
 import { command, commands, subCommands } from './commands';
 import { isAuth } from './auth';
 import { dangerEmbeds, successEmbeds, successEmbedsWithDescription } from './embeds';
+import http from 'http';
 
 dotenv.config()
+
+http.createServer(function (req: any, res: any) {
+    res.write("OK");
+    res.end();
+}).listen(8080);
 
 const ptList = new Nedb();
 const client = new Client({
