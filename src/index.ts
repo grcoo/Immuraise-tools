@@ -28,6 +28,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
         await interaction.reply(dangerEmbeds('コマンドを実行するchが違うようです。'));
         return;
     }
+    const guild = client.guilds.cache.get(process.env.SERVER_ID ?? '');
     if (interaction.commandName === command) {
         if (!interaction.isChatInputCommand()) return;
         if (interaction.options.getSubcommand() === subCommands.create) {
@@ -61,7 +62,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
 
             if (pt !== null) {
                 if (!await isAuth(interaction, pt)) {
-                    const creator = await (await client.users.fetch(pt.creatorId)).username;
+                    const creator = await (await guild?.members?.fetch(pt.creatorId))?.displayName;
                     await interaction.reply(dangerEmbeds(`pt: ${ptname}を削除する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ削除できます。`));
                 }
                 await ptList.delete(ptname);
@@ -75,7 +76,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
             const pt = await ptList.get(ptname);
 
             if (pt !== null) {
-                const userName = await (await client.users.fetch(interaction.user.id)).username;
+                const userName = await (await guild?.members?.fetch(interaction.user.id))?.displayName ?? '';
                 pt.list.push({ userId: interaction.user.id, name: userName, ip: Number(interaction.options.getString('ip')), repairCost: Number(interaction.options.getString('repaircost')) });
                 await ptList.update(ptname, pt.list);
                 await interaction.reply(successEmbeds(`:triangular_flag_on_post: ${ptname}に ${userName}::crossed_swords: ${interaction.options.getString('ip')}:tools: ${interaction.options.getString('repaircost')}    追加完了!`));
@@ -106,7 +107,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
 
             if (pt !== null) {
                 if (!await isAuth(interaction, pt)) {
-                    const creator = await (await client.users.fetch(pt.creatorId)).username;
+                    const creator = await (await guild?.members?.fetch(pt.creatorId))?.displayName;
                     await interaction.reply(dangerEmbeds(`pt: ${ptname}を清算する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ清算できます。`));
                 }
                 const totalIp = pt.list.map((member) => member.ip).reduce((a, b) => Number(a) + Number(b));
@@ -120,7 +121,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
                         inline: true
                     }
                 });
-                await interaction.reply(successEmbedsWithDescription(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計: ${(silver / 1000000).toFixed(2)}M 修理費以外: ${((silver - totalCost) / 1000000).toFixed(2)}M 分配金: × 0.8 = ${(substanceSilver / 1000000).toFixed(2)}M  :crossed_swords:平均IP: ${totalIp / pt.list.length} :family_mmgb:参加人数: ${pt.list.length}名`));
+                await interaction.reply(successEmbedsWithDescription(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag:合計: ${(silver / 1000000).toFixed(2)}M 修理費: ${(totalCost / 1000000).toFixed(2)}M 分配金: × 0.8 = ${(substanceSilver / 1000000).toFixed(2)}M \n:crossed_swords:平均IP: ${Math.floor(totalIp / pt.list.length)} \n:family_mmgb:参加人数: ${pt.list.length}名`));
                 await ptList.delete(ptname);
             } else {
                 await interaction.reply(dangerEmbeds(`pt: ${ptname}は未登録です。`));
