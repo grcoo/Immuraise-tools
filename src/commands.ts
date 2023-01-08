@@ -58,12 +58,6 @@ export const commands: ChatInputApplicationCommandData[] = [{
                 },
                 {
                     type: 3,
-                    name: 'name',
-                    description: 'ptの名前を指定します',
-                    required: true
-                },
-                {
-                    type: 3,
                     name: 'ip',
                     description: 'ipを指定します',
                     required: true

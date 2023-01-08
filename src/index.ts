@@ -61,7 +61,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
 
             if (pt !== null) {
                 if (!await isAuth(interaction, pt)) {
-                    const creator = await client.users.fetch(pt.creatorId);
+                    const creator = await (await client.users.fetch(pt.creatorId)).username;
                     await interaction.reply(dangerEmbeds(`pt: ${ptname}を削除する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ削除できます。`));
                 }
                 await ptList.delete(ptname);
@@ -75,9 +75,10 @@ async function onInteraction(interaction: Interaction<CacheType>) {
             const pt = await ptList.get(ptname);
 
             if (pt !== null) {
-                pt.list.push({ userId: interaction.user.id, name: interaction.options.getString('name') ?? '', ip: Number(interaction.options.getString('ip')) });
+                const userName = await (await client.users.fetch(interaction.user.id)).username;
+                pt.list.push({ userId: interaction.user.id, name: userName, ip: Number(interaction.options.getString('ip')) });
                 await ptList.update(ptname, pt.list);
-                await interaction.reply(successEmbeds(`:triangular_flag_on_post: ${ptname}に ${interaction.options.getString('name') ?? ''} 追加完了!`));
+                await interaction.reply(successEmbeds(`:triangular_flag_on_post: ${ptname}に ${userName}::crossed_swords: ${interaction.options.getString('ip')}  追加完了!`));
             } else {
                 await interaction.reply(dangerEmbeds(`pt: ${ptname}は未登録です。`));
             }
@@ -106,7 +107,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
 
             if (pt !== null) {
                 if (!await isAuth(interaction, pt)) {
-                    const creator = await client.users.fetch(pt.creatorId);
+                    const creator = await (await client.users.fetch(pt.creatorId)).username;
                     await interaction.reply(dangerEmbeds(`pt: ${ptname}を清算する権限がありません。${creator}かロールDiscord AdminまたはOfficerのみ清算できます。`));
                 }
                 const totalIp = pt.list.map((member) => member.ip).reduce((a, b) => Number(a) + Number(b));
@@ -119,6 +120,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
                     }
                 });
                 await interaction.reply(successEmbedsWithDescription(`:confetti_ball: ${pt.name} 清算！`, fields, `:moneybag: 合計シルバー: ${silver} :crossed_swords:合計IP: ${totalIp} :family_mmgb:参加人数: ${pt.list.length}名`));
+                await ptList.delete(ptname);
             } else {
                 await interaction.reply(dangerEmbeds(`pt: ${ptname}は未登録です。`));
             }
