@@ -16,7 +16,7 @@ exports.Nedb = void 0;
 const nedb_promises_1 = __importDefault(require("nedb-promises"));
 class Nedb {
     constructor() {
-        this.db = nedb_promises_1.default.create({ autoload: true, inMemoryOnly: true, });
+        this.db = nedb_promises_1.default.create({ autoload: true, inMemoryOnly: true });
     }
     create(name, creatorId, list = []) {
         return __awaiter(this, void 0, void 0, function* () {

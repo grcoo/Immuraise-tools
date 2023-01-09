@@ -38,7 +38,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
   if (!interaction.isCommand()) {
     return;
   }
-  if (interaction.channelId !== process.env.CHANNEL_ID) {
+  if (interaction.channelId !== process.env.DEAL_CHANNEL_ID) {
     await interaction.reply(
       dangerEmbeds('コマンドを実行するchが違うようです。')
     );

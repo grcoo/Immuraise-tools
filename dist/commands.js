@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commands = exports.subCommands = exports.command = void 0;
-exports.command = 'dealer';
-exports.subCommands = {
+exports.commands = exports.subCommandsValue = exports.commandsValue = void 0;
+exports.commandsValue = { dealer: 'dealer' };
+exports.subCommandsValue = {
     list: 'list',
     create: 'create',
     remove: 'remove',
@@ -10,18 +10,19 @@ exports.subCommands = {
     member: 'member',
     deal: 'deal'
 };
-exports.commands = [{
-        name: exports.command,
+exports.commands = [
+    {
+        name: exports.commandsValue.dealer,
         description: 'ルートディーラー用',
         options: [
             {
                 type: 1,
-                name: exports.subCommands.list,
+                name: exports.subCommandsValue.list,
                 description: 'ptリストを返却します'
             },
             {
                 type: 1,
-                name: exports.subCommands.create,
+                name: exports.subCommandsValue.create,
                 description: 'ptリストにptを作成します',
                 options: [
                     {
@@ -34,7 +35,7 @@ exports.commands = [{
             },
             {
                 type: 1,
-                name: exports.subCommands.remove,
+                name: exports.subCommandsValue.remove,
                 description: '指定したptをptリストから削除します',
                 options: [
                     {
@@ -47,7 +48,7 @@ exports.commands = [{
             },
             {
                 type: 1,
-                name: exports.subCommands.add,
+                name: exports.subCommandsValue.add,
                 description: 'メンバーを追加します',
                 options: [
                     {
@@ -72,7 +73,7 @@ exports.commands = [{
             },
             {
                 type: 1,
-                name: exports.subCommands.member,
+                name: exports.subCommandsValue.member,
                 description: 'メンバーをリストで表示します',
                 options: [
                     {
@@ -85,7 +86,7 @@ exports.commands = [{
             },
             {
                 type: 1,
-                name: exports.subCommands.deal,
+                name: exports.subCommandsValue.deal,
                 description: '清算します',
                 options: [
                     {
@@ -103,4 +104,5 @@ exports.commands = [{
                 ]
             }
         ]
-    }];
+    }
+];
