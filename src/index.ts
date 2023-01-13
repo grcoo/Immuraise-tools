@@ -9,25 +9,9 @@ import {
   successEmbeds,
   successEmbedsWithDescription
 } from './embeds';
-import express from 'express';
+import { createDummyServer } from './dummyServe';
 
-const app = express();
-app.get('/', (_req, res) => {
-  res.send('🤖Bot is running!!🤖');
-});
-
-// GAEで最小インスタンス数を指定するには、Warmup Endpoint を有効にする必要がある
-app.get('/_ah/warmup', (_req, res) => {
-  res.sendStatus(200);
-});
-
-// Start the server
-const PORT = Number(process.env.PORT) || 8080;
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-  console.log('Press Ctrl+C to quit.');
-});
-
+createDummyServer(Number(process.env.PORT) || 8080);
 dotenv.config();
 
 const ptList = new Nedb();
