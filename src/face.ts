@@ -1,5 +1,4 @@
 export const face = [
-  ':bowtie: ',
   ':smile: ',
   ':laughing: ',
   ':blush: ',
@@ -48,7 +47,6 @@ export const face = [
   ':joy: ',
   ':astonished: ',
   ':scream: ',
-  ':neckbeard: ',
   ':tired_face: ',
   ':angry: ',
   ':rage: ',

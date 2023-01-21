@@ -1,76 +1,57 @@
 import { face } from './face';
-import { Nedb } from './adapter/nedb-adapter';
+import { Nedb, Pt, Remind } from './adapter/nedb-adapter';
 import { APIEmbedField, CacheType, Client, Interaction } from 'discord.js';
 import dotenv from 'dotenv';
 import { commandsValue, commands, subCommandsValue } from './commands';
 import { isAuth } from './auth';
 import {
   dangerEmbeds,
+  remindEmbed,
   successEmbeds,
   successEmbedsWithDescription
 } from './embeds';
-import express from 'express';
+import { createDummyServer } from './dummy-serve';
+import { add } from 'date-fns';
+import { processReminder } from './remind';
 
-const app = express();
-app.get('/', (_req, res) => {
-  res.send('🤖Bot is running!!🤖');
-});
-
-// GAEで最小インスタンス数を指定するには、Warmup Endpoint を有効にする必要がある
-app.get('/_ah/warmup', (_req, res) => {
-  res.sendStatus(200);
-});
-
-// Start the server
-const PORT = Number(process.env.PORT) || 8080;
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
-  console.log('Press Ctrl+C to quit.');
-});
-
+createDummyServer(Number(process.env.PORT) || 8080);
 dotenv.config();
 
-const ptList = new Nedb();
+const ptDB = new Nedb();
+const remindDB = new Nedb();
 const client = new Client({
   intents: ['Guilds', 'GuildMembers', 'GuildMessages', 'MessageContent']
 });
 
-client.once('ready', async () => {
-  await client.application?.commands.set(commands, process.env.SERVER_ID ?? '');
-  console.log('Ready!');
-});
-
-client.on('interactionCreate', (interaction) =>
-  onInteraction(interaction).catch((err) => console.error(err))
-);
-
 async function onInteraction(interaction: Interaction<CacheType>) {
-  if (!interaction.isCommand()) {
-    return;
-  }
-  if (interaction.channelId !== process.env.DEAL_CHANNEL_ID) {
-    await interaction.reply(
-      dangerEmbeds('コマンドを実行するchが違うようです。')
-    );
-    return;
-  }
+  if (!interaction.isCommand()) return;
+  if (!interaction.isChatInputCommand()) return;
   const guild = client.guilds.cache.get(process.env.SERVER_ID ?? '');
   if (interaction.commandName === commandsValue.dealer) {
-    if (!interaction.isChatInputCommand()) return;
+    if (interaction.channelId !== process.env.DEAL_CHANNEL_ID) {
+      await interaction.reply(
+        dangerEmbeds('コマンドを実行するchが違うようです。')
+      );
+      return;
+    }
     if (interaction.options.getSubcommand() === subCommandsValue.create) {
       const ptname = interaction.options.getString('ptname') ?? '';
-      const isExist = await ptList.get(ptname);
+      const isExist = await ptDB.get({ name: ptname });
       if (isExist) {
         await interaction.reply(dangerEmbeds('既に存在するptです。'));
         return;
       }
-      await ptList.create(ptname, interaction.user.id);
+      await ptDB.create<Pt>({
+        name: ptname,
+        creatorId: interaction.user.id,
+        list: []
+      });
       await interaction.reply(
         successEmbeds(`:triangular_flag_on_post: ${ptname} 作成完了!`)
       );
     }
     if (interaction.options.getSubcommand() === subCommandsValue.list) {
-      const list = await ptList.getAll();
+      const list = await ptDB.getAll<Pt>();
       if (list !== null && list.length !== 0) {
         const fields: APIEmbedField[] = list.map((pt) => {
           return {
@@ -86,7 +67,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     }
     if (interaction.options.getSubcommand() === subCommandsValue.remove) {
       const ptname = interaction.options.getString('ptname') ?? '';
-      const pt = await ptList.get(ptname);
+      const pt = await ptDB.get<Pt>({ name: ptname });
 
       if (pt !== null) {
         if (!(await isAuth(interaction, pt))) {
@@ -99,7 +80,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
             )
           );
         }
-        await ptList.delete(ptname);
+        await ptDB.delete({ name: ptname });
         await interaction.reply(
           successEmbeds(`:triangular_flag_on_post: ${ptname} 削除完了!`)
         );
@@ -109,7 +90,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     }
     if (interaction.options.getSubcommand() === subCommandsValue.add) {
       const ptname = interaction.options.getString('ptname') ?? '';
-      const pt = await ptList.get(ptname);
+      const pt = await ptDB.get<Pt>({ name: ptname });
 
       if (pt !== null) {
         const userName =
@@ -119,13 +100,13 @@ async function onInteraction(interaction: Interaction<CacheType>) {
         pt.list.push({
           userId: interaction.user.id,
           name: userName,
-          ip: Number(interaction.options.getString('ip')),
-          repairCost: Number(interaction.options.getString('repaircost'))
+          ip: interaction.options.getNumber('ip') ?? 0,
+          repairCost: interaction.options.getNumber('repaircost') ?? 0
         });
-        await ptList.update(ptname, pt.list);
+        await ptDB.updatePt(ptname, pt.list);
         await interaction.reply(
           successEmbeds(
-            `:triangular_flag_on_post: ${ptname}に ${userName}::crossed_swords: ${interaction.options.getString(
+            `:triangular_flag_on_post: ${ptname}に ${userName}::crossed_swords: ${interaction.options.getNumber(
               'ip'
             )}:tools: ${interaction.options.getString(
               'repaircost'
@@ -138,7 +119,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     }
     if (interaction.options.getSubcommand() === subCommandsValue.member) {
       const ptname = interaction.options.getString('ptname') ?? '';
-      const pt = await ptList.get(ptname);
+      const pt = await ptDB.get<Pt>({ name: ptname });
 
       if (pt !== null) {
         const fields: APIEmbedField[] = pt.list.map((pt) => {
@@ -157,7 +138,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     }
     if (interaction.options.getSubcommand() === subCommandsValue.deal) {
       const ptname = interaction.options.getString('ptname') ?? '';
-      const pt = await ptList.get(ptname);
+      const pt = await ptDB.get<Pt>({ name: ptname });
 
       if (pt !== null) {
         if (!(await isAuth(interaction, pt))) {
@@ -172,11 +153,11 @@ async function onInteraction(interaction: Interaction<CacheType>) {
         }
         const totalIp = pt.list
           .map((member) => member.ip)
-          .reduce((a, b) => Number(a) + Number(b));
+          .reduce((a, b) => a + b);
         const totalCost = pt.list
           .map((member) => member.repairCost)
-          .reduce((a, b) => Number(a) + Number(b));
-        const silver = Number(interaction.options.getString('silver') ?? '0');
+          .reduce((a, b) => a + b);
+        const silver = interaction.options.getNumber('silver') ?? 0;
         const substanceSilver = (silver - totalCost) * 0.8;
         const fields: APIEmbedField[] = pt.list.map((member) => {
           return {
@@ -184,8 +165,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
               member.name
             }: ${member.ip}`,
             value: `${(
-              (substanceSilver * (Number(member.ip) / totalIp) +
-                member.repairCost) /
+              (substanceSilver * (member.ip / totalIp) + member.repairCost) /
               1000000
             ).toFixed(2)}M`,
             inline: true
@@ -204,12 +184,75 @@ async function onInteraction(interaction: Interaction<CacheType>) {
             )} \n:family_mmgb:参加人数: ${pt.list.length}名`
           )
         );
-        await ptList.delete(ptname);
+        await ptDB.delete({ name: ptname });
       } else {
         await interaction.reply(dangerEmbeds(`pt: ${ptname}は未登録です。`));
       }
     }
   }
+
+  if (interaction.commandName === commandsValue.remind) {
+    if (interaction.channelId !== process.env.REMIND_CHANNEL_ID) {
+      await interaction.reply(
+        dangerEmbeds('コマンドを実行するchが違うようです。')
+      );
+      return;
+    }
+    if (interaction.options.getSubcommand() === subCommandsValue.list) {
+      const reminders = await remindDB.getAll<Remind>();
+      if (reminders === null || reminders.length === 0) {
+        await interaction.reply(
+          dangerEmbeds('リマインドは1件も登録されていません。')
+        );
+        return;
+      }
+      const embed = reminders.map((remind) => remindEmbed(remind));
+      await interaction.reply({ embeds: embed });
+    }
+    if (interaction.options.getSubcommand() === subCommandsValue.create) {
+      const mapImage = interaction.options.getAttachment('mapimage', true);
+      const mapObject = interaction.options.getString('objectname') ?? '';
+      const isExist = await remindDB.get<Remind>({
+        mapImage: mapImage.url
+      });
+      if (isExist) {
+        await interaction.reply(dangerEmbeds('既に存在するリマインドです。'));
+        return;
+      }
+      const remind = {
+        mapImage: mapImage.url,
+        objectName: mapObject,
+        timestamp: add(new Date(), {
+          hours: 9,
+          minutes: interaction.options.getNumber('time') ?? 0
+        }).getTime()
+      };
+      if (interaction.options.getNumber('time') ?? 0 > 1) {
+        await remindDB.create<Remind>(remind);
+      }
+      await interaction.reply({
+        embeds: [
+          remindEmbed(remind, interaction.options.getNumber('time') ?? 0)
+        ],
+        content: `<@&${process.env.OUTLAND_MENTION_ID}>`
+      });
+    }
+  }
 }
+
+client.once('ready', async () => {
+  await client.application?.commands.set(commands, process.env.SERVER_ID ?? '');
+  console.log('Ready!');
+});
+
+client.on('interactionCreate', (interaction) =>
+  onInteraction(interaction).catch((err) => console.error(err))
+);
+
+setInterval(
+  () =>
+    processReminder(remindDB, client, add(new Date(), { hours: 9 }).getTime()),
+  60000
+);
 
 client.login(process.env.TOKEN);

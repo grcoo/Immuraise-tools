@@ -1,9 +1,15 @@
 import Datastore from 'nedb-promises';
 
-export interface PtList {
+export interface Pt {
   name: string;
   creatorId: string;
   list: Member[];
+}
+
+export interface Remind {
+  mapImage: string;
+  objectName: string;
+  timestamp: number;
 }
 
 export interface Member {
@@ -13,6 +19,10 @@ export interface Member {
   repairCost: number;
 }
 
+export type Query = {
+  [key: string]: any;
+};
+
 export class Nedb {
   private db;
 
@@ -20,24 +30,24 @@ export class Nedb {
     this.db = Datastore.create({ autoload: true, inMemoryOnly: true });
   }
 
-  public async create(name: string, creatorId: string, list = []) {
-    await this.db.insert({ name: name, creatorId: creatorId, list: list });
+  public async create<T>(t: T) {
+    await this.db.insert(t);
   }
 
-  public async get(name: string): Promise<PtList | null> {
-    return await this.db.findOne<PtList>({ name: name });
+  public async get<T>(query: Query): Promise<T | null> {
+    return await this.db.findOne<T>(query);
   }
 
-  public async getAll(): Promise<PtList[] | null> {
-    return await this.db.find<PtList>({});
+  public async getAll<T>(): Promise<T[] | null> {
+    return await this.db.find<T>({});
   }
 
-  public async delete(name: string) {
-    await this.db.remove({ name: name }, {});
+  public async delete(query: Query) {
+    await this.db.remove(query, {});
   }
 
-  public async update(name: string, list: Member[]) {
-    await this.db.update<PtList>(
+  public async updatePt(name: string, list: Member[]) {
+    await this.db.update<Pt>(
       { name: name },
       { $set: { list: list } },
       { multi: true }
