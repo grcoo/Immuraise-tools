@@ -1,7 +1,7 @@
 import { getSeconds } from 'date-fns';
 import { Client } from 'discord.js';
-import { Nedb, Remind } from './adapter/nedb-adapter';
-import { isRemining1minutes, isRemining5minutes } from './date-utility';
+import { Nedb, Remind } from '../adapter/nedb-adapter';
+import { isRemining1minutes, isRemining5minutes } from '../utility/date';
 import { remindEmbed } from './embeds';
 
 export async function processReminder(

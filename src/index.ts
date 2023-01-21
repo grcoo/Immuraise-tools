@@ -1,18 +1,18 @@
-import { face } from './face';
+import { face } from './discord/face';
 import { Nedb, Pt, Remind } from './adapter/nedb-adapter';
 import { APIEmbedField, CacheType, Client, Interaction } from 'discord.js';
 import dotenv from 'dotenv';
-import { commandsValue, commands, subCommandsValue } from './commands';
-import { isAuth } from './auth';
+import { commandsValue, commands, subCommandsValue } from './discord/commands';
+import { isAuth } from './utility/auth';
 import {
   dangerEmbeds,
   remindEmbed,
   successEmbeds,
   successEmbedsWithDescription
-} from './embeds';
-import { createDummyServer } from './dummy-serve';
+} from './discord/embeds';
+import { createDummyServer } from './dummy-server';
 import { add } from 'date-fns';
-import { processReminder } from './remind';
+import { processReminder } from './discord/remind';
 
 createDummyServer(Number(process.env.PORT) || 8080);
 dotenv.config();

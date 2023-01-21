@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { APIEmbedField, Colors, EmbedBuilder } from 'discord.js';
-import { Remind } from './adapter/nedb-adapter';
+import { Remind } from '../adapter/nedb-adapter';
 
 export function dangerEmbeds(title: string) {
   return {

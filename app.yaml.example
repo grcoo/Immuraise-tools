@@ -1,0 +1,16 @@
+runtime: nodejs16
+instance_class: F1
+automatic_scaling: 
+  min_instances: 1
+  max_instances: 1
+  min_idle_instances: 1
+  max_idle_instances: 1
+  max_pending_latency: 2000ms
+inbound_services: 
+  - warmup
+env_variables:
+  TOKEN: 'discord bot token'
+  SERVER_ID: 'discord server id'
+  DEAL_CHANNEL_ID: 'loot deal text ch id'
+  REMIND_CHANNEL_ID: 'remind text ch id'
+  OUTLAND_MENTION_ID: 'remind mention role id'

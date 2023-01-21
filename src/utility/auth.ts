@@ -1,5 +1,5 @@
 import { Interaction, CacheType } from 'discord.js';
-import { Pt } from './adapter/nedb-adapter';
+import { Pt } from '../adapter/nedb-adapter';
 
 const AdminRole = { admin: 'Discord Admin', officer: 'Officer' } as const;
 
