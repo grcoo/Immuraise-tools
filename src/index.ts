@@ -270,6 +270,7 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     let member: GuildMember[] = [];
     if (targetMember instanceof Collection<string, GuildMember>) {
       targetMember.forEach((target) => {
+        if (target.id === process.env.READ_BOT_ID) return;
         if (excludesUser !== '' && target.id.includes(excludesUser)) return;
         member.push(target);
       });

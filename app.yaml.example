@@ -15,3 +15,4 @@ env_variables:
   REMIND_CHANNEL_ID: 'remind text ch id'
   SHUFFLE_CHANNEL_ID: 'shuffle text ch id'
   OUTLAND_MENTION_ID: 'remind mention role id'
+  READ_BOT_ID: 'reading bot id'
