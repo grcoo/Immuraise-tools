@@ -2,11 +2,12 @@ import {
   ApplicationCommandOptionType,
   ChatInputApplicationCommandData
 } from 'discord.js';
-import { mapObject } from './map-object';
+import { mapObject } from './choices/map-object';
 
 export const commandsValue = {
   dealer: 'dealer',
-  remind: 'remind'
+  remind: 'remind',
+  shuffle: 'shuffle'
 } as const;
 export const subCommandsValue = {
   list: 'list',
@@ -146,6 +147,39 @@ export const commands: ChatInputApplicationCommandData[] = [
             required: true
           }
         ]
+      }
+    ]
+  },
+  {
+    name: commandsValue.shuffle,
+    description: 'PT割り振り',
+    options: [
+      {
+        type: ApplicationCommandOptionType.Channel,
+        name: 'currentch',
+        description: '割り振り対象メンバーが存在するvoice ch名',
+        required: true,
+        channel_types: [2]
+      },
+      {
+        type: ApplicationCommandOptionType.Channel,
+        name: 'ch1',
+        description: '割り振り先voice ch名1',
+        required: true,
+        channel_types: [2]
+      },
+      {
+        type: ApplicationCommandOptionType.Channel,
+        name: 'ch2',
+        description: '割り振り先voice ch名2',
+        required: true,
+        channel_types: [2]
+      },
+      {
+        type: ApplicationCommandOptionType.String,
+        name: 'excludes',
+        description: '割り振りから除外するメンバーのメンション（複数指定化）',
+        required: false
       }
     ]
   }

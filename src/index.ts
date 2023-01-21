@@ -1,6 +1,14 @@
 import { face } from './discord/face';
 import { Nedb, Pt, Remind } from './adapter/nedb-adapter';
-import { APIEmbedField, CacheType, Client, Interaction } from 'discord.js';
+import {
+  APIEmbedField,
+  CacheType,
+  ChannelType,
+  Client,
+  Collection,
+  GuildMember,
+  Interaction
+} from 'discord.js';
 import dotenv from 'dotenv';
 import { commandsValue, commands, subCommandsValue } from './discord/commands';
 import { isAuth } from './utility/auth';
@@ -13,6 +21,7 @@ import {
 import { createDummyServer } from './dummy-server';
 import { add } from 'date-fns';
 import { processReminder } from './discord/remind';
+import { shuffle } from './utility/shuffle';
 
 createDummyServer(Number(process.env.PORT) || 8080);
 dotenv.config();
@@ -26,7 +35,7 @@ const client = new Client({
 async function onInteraction(interaction: Interaction<CacheType>) {
   if (!interaction.isCommand()) return;
   if (!interaction.isChatInputCommand()) return;
-  const guild = client.guilds.cache.get(process.env.SERVER_ID ?? '');
+  const guild = await client.guilds.fetch(process.env.SERVER_ID ?? '');
   if (interaction.commandName === commandsValue.dealer) {
     if (interaction.channelId !== process.env.DEAL_CHANNEL_ID) {
       await interaction.reply(
@@ -237,6 +246,49 @@ async function onInteraction(interaction: Interaction<CacheType>) {
         content: `<@&${process.env.OUTLAND_MENTION_ID}>`
       });
     }
+  }
+
+  if (interaction.commandName === commandsValue.shuffle) {
+    if (interaction.channelId !== process.env.SHUFFLE_CHANNEL_ID) {
+      await interaction.reply(
+        dangerEmbeds('コマンドを実行するchが違うようです。')
+      );
+      return;
+    }
+
+    const excludesUser = interaction.options.getString('excludes') ?? '';
+    const targetChannel = await guild.channels.fetch(
+      interaction.options.getChannel('currentch')?.id ?? ''
+    );
+    const channel1 = await guild.channels.fetch(
+      interaction.options.getChannel('ch1')?.id ?? ''
+    );
+    const channel2 = await guild.channels.fetch(
+      interaction.options.getChannel('ch2')?.id ?? ''
+    );
+    const targetMember = targetChannel?.members;
+    let member: GuildMember[] = [];
+    if (targetMember instanceof Collection<string, GuildMember>) {
+      targetMember.forEach((target) => {
+        if (excludesUser !== '' && target.id.includes(excludesUser)) return;
+        member.push(target);
+      });
+    }
+    const shuffledMember = shuffle<GuildMember>(member);
+    shuffledMember.forEach((m, index) => {
+      if (index < Math.ceil(shuffledMember.length / 2)) {
+        m.voice.setChannel(
+          channel1?.type === ChannelType.GuildVoice ? channel1 : null
+        );
+      } else {
+        m.voice.setChannel(
+          channel2?.type === ChannelType.GuildVoice ? channel2 : null
+        );
+      }
+    });
+    await interaction.reply(
+      successEmbeds(':triangular_flag_on_post: 割り振り完了！')
+    );
   }
 }
 
