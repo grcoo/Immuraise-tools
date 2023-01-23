@@ -2,10 +2,13 @@ import { face } from './discord/face';
 import { Nedb, Pt, Remind } from './adapter/nedb-adapter';
 import {
   APIEmbedField,
+  AttachmentBuilder,
   CacheType,
   ChannelType,
   Client,
   Collection,
+  Colors,
+  EmbedBuilder,
   GuildMember,
   Interaction
 } from 'discord.js';
@@ -268,6 +271,8 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     );
     const targetMember = targetChannel?.members;
     let member: GuildMember[] = [];
+    let pt1: string[] = [];
+    let pt2: string[] = [];
     if (targetMember instanceof Collection<string, GuildMember>) {
       targetMember.forEach((target) => {
         if (target.id === process.env.READ_BOT_ID) return;
@@ -278,18 +283,34 @@ async function onInteraction(interaction: Interaction<CacheType>) {
     const shuffledMember = shuffle<GuildMember>(member);
     shuffledMember.forEach((m, index) => {
       if (index < Math.ceil(shuffledMember.length / 2)) {
+        pt1.push(m.displayName);
         m.voice.setChannel(
           channel1?.type === ChannelType.GuildVoice ? channel1 : null
         );
       } else {
+        pt2.push(m.displayName);
         m.voice.setChannel(
           channel2?.type === ChannelType.GuildVoice ? channel2 : null
         );
       }
     });
-    await interaction.reply(
-      successEmbeds(':triangular_flag_on_post: 割り振り完了！')
-    );
+    await interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(Colors.Green)
+          .setTitle(':performing_arts: PT割り振り完了！')
+          .setFields([
+            {
+              name: `:loud_sound: ${channel1?.name ?? ''}`,
+              value: pt1.length !== 0 ? pt1.join(' ') : 'nothing'
+            },
+            {
+              name: `:loud_sound: ${channel2?.name ?? ''}`,
+              value: pt2.length !== 0 ? pt2.join(' ') : 'nothing'
+            }
+          ])
+      ]
+    });
   }
 }
 
